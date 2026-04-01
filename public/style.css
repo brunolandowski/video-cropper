@@ -1,0 +1,40 @@
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  position: relative;
+  display: inline-block;
+}
+
+video {
+  max-width: 600px;
+}
+
+#cropBox {
+  position: absolute;
+  border: 2px solid red;
+  cursor: move;
+  top: 50px;
+  left: 50px;
+  width: 200px;
+  height: 150px;
+}
+
+/* handles */
+.handle {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 2px solid red;
+  position: absolute;
+}
+
+.nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+.controls {
+  margin-top: 10px;
+}

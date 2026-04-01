@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Cropper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>🎬 Video Cropper</h2>
+
+<input type="file" id="videoInput"><br><br>
+
+<label>Ratio :</label>
+<select id="ratioSelect">
+  <option value="">Libre</option>
+  <option value="16/9">16:9</option>
+  <option value="4/5">4:5</option>
+  <option value="4/3">4:3</option>
+  <option value="1/1">1:1</option>
+  <option value="9/16">9:16</option>
+</select>
+
+<br><br>
+
+<div class="container">
+  <video id="video" controls></video>
+  <div id="cropBox"></div>
+</div>
+
+<div class="controls">
+  X: <input type="number" id="x">
+  Y: <input type="number" id="y">
+  W: <input type="number" id="w">
+  H: <input type="number" id="h">
+</div>
+
+<button onclick="crop()">Export</button>
+
+<script src="app.js"></script>
+</body>
+</html>
