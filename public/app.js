@@ -22,13 +22,16 @@ let currentHandle = null;
 let offsetX, offsetY;
 let startX, startY;
 let startWidth, startHeight;
+let startLeft, startTop;
 
 let lockedRatio = null;
 
+// 🎥 load video
 videoInput.onchange = (e) => {
   video.src = URL.createObjectURL(e.target.files[0]);
 };
 
+// 🎯 ratio
 ratioSelect.addEventListener("change", () => {
   if (!ratioSelect.value) {
     lockedRatio = null;
@@ -44,6 +47,7 @@ ratioSelect.addEventListener("change", () => {
   updateInputs();
 });
 
+// 🟥 handles
 ["nw","ne","sw","se"].forEach(pos => {
   const handle = document.createElement("div");
   handle.className = "handle " + pos;
@@ -59,18 +63,23 @@ ratioSelect.addEventListener("change", () => {
 
     startWidth = cropBox.offsetWidth;
     startHeight = cropBox.offsetHeight;
+    startLeft = cropBox.offsetLeft;
+    startTop = cropBox.offsetTop;
   });
 });
 
+// 🟦 drag
 cropBox.addEventListener("mousedown", (e) => {
   isDragging = true;
   offsetX = e.offsetX;
   offsetY = e.offsetY;
 });
 
+// 🖱 move
 document.addEventListener("mousemove", (e) => {
   const rect = video.getBoundingClientRect();
 
+  // drag
   if (isDragging) {
     let x = e.clientX - rect.left - offsetX;
     let y = e.clientY - rect.top - offsetY;
@@ -84,18 +93,55 @@ document.addEventListener("mousemove", (e) => {
     updateInputs();
   }
 
+  // resize
   if (isResizing) {
     let dx = e.clientX - startX;
+    let dy = e.clientY - startY;
 
     let newWidth = startWidth;
+    let newHeight = startHeight;
+    let newLeft = startLeft;
+    let newTop = startTop;
 
-    if (currentHandle.includes("e")) newWidth += dx;
-    if (currentHandle.includes("w")) newWidth -= dx;
+    // 👉 droite
+    if (currentHandle.includes("e")) {
+      newWidth = startWidth + dx;
+    }
 
-    let newHeight = lockedRatio ? newWidth / lockedRatio : startHeight;
+    // 👉 gauche
+    if (currentHandle.includes("w")) {
+      newWidth = startWidth - dx;
+      newLeft = startLeft + dx;
+    }
 
-    cropBox.style.width = Math.max(20, newWidth) + "px";
-    cropBox.style.height = Math.max(20, newHeight) + "px";
+    // 👉 bas
+    if (currentHandle.includes("s")) {
+      newHeight = startHeight + dy;
+    }
+
+    // 👉 haut
+    if (currentHandle.includes("n")) {
+      newHeight = startHeight - dy;
+      newTop = startTop + dy;
+    }
+
+    // 🎯 ratio lock
+    if (lockedRatio) {
+      if (currentHandle.includes("w") || currentHandle.includes("e")) {
+        newHeight = newWidth / lockedRatio;
+      } else {
+        newWidth = newHeight * lockedRatio;
+      }
+    }
+
+    // min size
+    newWidth = Math.max(20, newWidth);
+    newHeight = Math.max(20, newHeight);
+
+    cropBox.style.width = newWidth + "px";
+    cropBox.style.height = newHeight + "px";
+    cropBox.style.left = newLeft + "px";
+    cropBox.style.top = newTop + "px";
 
     updateInputs();
   }
@@ -106,6 +152,7 @@ document.addEventListener("mouseup", () => {
   isResizing = false;
 });
 
+// 🔢 sync inputs
 function updateInputs() {
   xInput.value = parseInt(cropBox.style.left) || 0;
   yInput.value = parseInt(cropBox.style.top) || 0;
@@ -113,6 +160,7 @@ function updateInputs() {
   hInput.value = cropBox.offsetHeight;
 }
 
+// 🎬 export + progress temps réel
 async function crop() {
   const file = videoInput.files[0];
 
@@ -147,6 +195,7 @@ async function crop() {
   eventSource.close();
 
   const url = URL.createObjectURL(blob);
+
   const a = document.createElement("a");
   a.href = url;
   a.download = "cropped.mp4";
