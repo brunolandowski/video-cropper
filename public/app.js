@@ -4,11 +4,11 @@ const video = document.getElementById("video");
 const previewVideo = document.getElementById("previewVideo");
 const previewFrame = document.getElementById("previewFrame");
 const cropBox = document.getElementById("cropBox");
-
 const ratioSelect = document.getElementById("ratioSelect");
 
 let currentFile;
 
+// STATE
 let isDragging = false;
 let isResizing = false;
 let currentHandle = null;
@@ -20,7 +20,7 @@ let startLeft, startTop;
 
 let lockedRatio = null;
 
-/* load */
+/* LOAD VIDEO */
 function loadVideo(file) {
   currentFile = file;
   const url = URL.createObjectURL(file);
@@ -28,7 +28,31 @@ function loadVideo(file) {
   previewVideo.src = url;
 }
 
-/* 🔥 PREVIEW FIX */
+/* DRAG & DROP FIX */
+dropZone.addEventListener("click", () => videoInput.click());
+
+videoInput.addEventListener("change", (e) => {
+  if (e.target.files[0]) loadVideo(e.target.files[0]);
+});
+
+dropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  const file = e.dataTransfer.files[0];
+  if (file) loadVideo(file);
+});
+
+/* PREVIEW (FIX PROPRE) */
 function updatePreview() {
   if (!video.videoWidth) return;
 
@@ -42,35 +66,22 @@ function updatePreview() {
   const w = cropBox.offsetWidth * scaleX;
   const h = cropBox.offsetHeight * scaleY;
 
-  const frameW = previewFrame.offsetWidth;
-
-  // 👉 mode libre = preview suit le crop
+  // 👉 preview ratio libre
   if (!lockedRatio) {
-    previewFrame.style.height = (cropBox.offsetHeight / cropBox.offsetWidth) * frameW + "px";
+    const frameW = previewFrame.offsetWidth;
+    previewFrame.style.height = (h / w) * frameW + "px";
   }
 
-  const displayScale = frameW / w;
+  const scale = previewFrame.offsetWidth / w;
 
-  previewVideo.style.width = video.videoWidth * displayScale + "px";
-  previewVideo.style.height = video.videoHeight * displayScale + "px";
+  previewVideo.style.width = video.videoWidth * scale + "px";
+  previewVideo.style.height = video.videoHeight * scale + "px";
 
-  previewVideo.style.transform = `translate(${-x * displayScale}px, ${-y * displayScale}px)`;
+  previewVideo.style.transform = `translate(${-x * scale}px, ${-y * scale}px)`;
 }
 
-/* drag drop */
-dropZone.onclick = () => videoInput.click();
-
-videoInput.onchange = e => {
-  if (e.target.files[0]) loadVideo(e.target.files[0]);
-};
-
-dropZone.ondrop = e => {
-  e.preventDefault();
-  loadVideo(e.dataTransfer.files[0]);
-};
-
-/* ratio */
-ratioSelect.onchange = () => {
+/* RATIO */
+ratioSelect.addEventListener("change", () => {
   if (!ratioSelect.value) {
     lockedRatio = null;
     updatePreview();
@@ -87,15 +98,15 @@ ratioSelect.onchange = () => {
   cropBox.style.height = currentWidth / lockedRatio + "px";
 
   updatePreview();
-};
+});
 
-/* handles */
+/* HANDLES */
 ["nw","ne","sw","se"].forEach(pos => {
-  const h = document.createElement("div");
-  h.className = "handle " + pos;
-  cropBox.appendChild(h);
+  const handle = document.createElement("div");
+  handle.className = "handle " + pos;
+  cropBox.appendChild(handle);
 
-  h.onmousedown = e => {
+  handle.addEventListener("mousedown", (e) => {
     e.stopPropagation();
     isResizing = true;
     currentHandle = pos;
@@ -106,17 +117,18 @@ ratioSelect.onchange = () => {
     startHeight = cropBox.offsetHeight;
     startLeft = cropBox.offsetLeft;
     startTop = cropBox.offsetTop;
-  };
+  });
 });
 
-/* drag */
-cropBox.onmousedown = e => {
+/* DRAG */
+cropBox.addEventListener("mousedown", (e) => {
   isDragging = true;
   offsetX = e.offsetX;
   offsetY = e.offsetY;
-};
+});
 
-document.onmousemove = e => {
+/* MOVE */
+document.addEventListener("mousemove", (e) => {
   const rect = video.getBoundingClientRect();
 
   if (isDragging) {
@@ -149,9 +161,9 @@ document.onmousemove = e => {
 
     updatePreview();
   }
-};
+});
 
-document.onmouseup = () => {
+document.addEventListener("mouseup", () => {
   isDragging = false;
   isResizing = false;
-};
+});
