@@ -7,12 +7,7 @@ const cropBox = document.getElementById("cropBox");
 
 const ratioSelect = document.getElementById("ratioSelect");
 
-const progressContainer = document.getElementById("progressContainer");
-const progressBar = document.getElementById("progressBar");
-const progressText = document.getElementById("progressText");
-
 let currentFile;
-let eventSource;
 
 let isDragging = false;
 let isResizing = false;
@@ -25,7 +20,7 @@ let startLeft, startTop;
 
 let lockedRatio = null;
 
-/* load video */
+/* load */
 function loadVideo(file) {
   currentFile = file;
   const url = URL.createObjectURL(file);
@@ -33,7 +28,7 @@ function loadVideo(file) {
   previewVideo.src = url;
 }
 
-/* preview */
+/* 🔥 PREVIEW FIX */
 function updatePreview() {
   if (!video.videoWidth) return;
 
@@ -48,53 +43,45 @@ function updatePreview() {
   const h = cropBox.offsetHeight * scaleY;
 
   const frameW = previewFrame.offsetWidth;
-  const frameH = previewFrame.offsetHeight;
 
-  const scale = Math.max(frameW / w, frameH / h);
+  // 👉 mode libre = preview suit le crop
+  if (!lockedRatio) {
+    previewFrame.style.height = (cropBox.offsetHeight / cropBox.offsetWidth) * frameW + "px";
+  }
 
-  previewVideo.style.width = video.videoWidth * scale + "px";
-  previewVideo.style.height = video.videoHeight * scale + "px";
+  const displayScale = frameW / w;
 
-  previewVideo.style.objectFit = "none";
-  previewVideo.style.objectPosition = `-${x * scale}px -${y * scale}px`;
+  previewVideo.style.width = video.videoWidth * displayScale + "px";
+  previewVideo.style.height = video.videoHeight * displayScale + "px";
+
+  previewVideo.style.transform = `translate(${-x * displayScale}px, ${-y * displayScale}px)`;
 }
 
-/* drag & drop */
+/* drag drop */
 dropZone.onclick = () => videoInput.click();
 
 videoInput.onchange = e => {
   if (e.target.files[0]) loadVideo(e.target.files[0]);
 };
 
-dropZone.ondragover = e => {
-  e.preventDefault();
-  dropZone.classList.add("dragover");
-};
-
-dropZone.ondragleave = () => {
-  dropZone.classList.remove("dragover");
-};
-
 dropZone.ondrop = e => {
   e.preventDefault();
-  dropZone.classList.remove("dragover");
-  const file = e.dataTransfer.files[0];
-  if (file) loadVideo(file);
+  loadVideo(e.dataTransfer.files[0]);
 };
 
 /* ratio */
 ratioSelect.onchange = () => {
   if (!ratioSelect.value) {
     lockedRatio = null;
-    previewFrame.style.height = "150px";
+    updatePreview();
     return;
   }
 
   const [w, h] = ratioSelect.value.split("/").map(Number);
   lockedRatio = w / h;
 
-  const width = previewFrame.offsetWidth;
-  previewFrame.style.height = width / lockedRatio + "px";
+  const frameW = previewFrame.offsetWidth;
+  previewFrame.style.height = frameW / lockedRatio + "px";
 
   const currentWidth = cropBox.offsetWidth;
   cropBox.style.height = currentWidth / lockedRatio + "px";
@@ -108,7 +95,7 @@ ratioSelect.onchange = () => {
   h.className = "handle " + pos;
   cropBox.appendChild(h);
 
-  h.onmousedown = (e) => {
+  h.onmousedown = e => {
     e.stopPropagation();
     isResizing = true;
     currentHandle = pos;
@@ -133,11 +120,8 @@ document.onmousemove = e => {
   const rect = video.getBoundingClientRect();
 
   if (isDragging) {
-    let x = e.clientX - rect.left - offsetX;
-    let y = e.clientY - rect.top - offsetY;
-
-    cropBox.style.left = x + "px";
-    cropBox.style.top = y + "px";
+    cropBox.style.left = (e.clientX - rect.left - offsetX) + "px";
+    cropBox.style.top = (e.clientY - rect.top - offsetY) + "px";
     updatePreview();
   }
 
@@ -171,39 +155,3 @@ document.onmouseup = () => {
   isDragging = false;
   isResizing = false;
 };
-
-/* export */
-async function crop() {
-  if (!currentFile) return;
-
-  const rect = video.getBoundingClientRect();
-  const scaleX = video.videoWidth / rect.width;
-  const scaleY = video.videoHeight / rect.height;
-
-  const formData = new FormData();
-  formData.append("video", currentFile);
-  formData.append("x", cropBox.offsetLeft * scaleX);
-  formData.append("y", cropBox.offsetTop * scaleY);
-  formData.append("width", cropBox.offsetWidth * scaleX);
-  formData.append("height", cropBox.offsetHeight * scaleY);
-
-  progressContainer.style.display = "block";
-
-  eventSource = new EventSource("/progress");
-  eventSource.onmessage = e => {
-    const p = Number(e.data);
-    progressBar.style.width = p + "%";
-    progressText.innerText = p + "%";
-  };
-
-  const res = await fetch("/crop", { method: "POST", body: formData });
-  const blob = await res.blob();
-
-  eventSource.close();
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "cropped.mp4";
-  a.click();
-}

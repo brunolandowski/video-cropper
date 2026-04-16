@@ -17,7 +17,6 @@ body {
   background: rgba(255,255,255,0.6);
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .layout {
@@ -25,22 +24,6 @@ body {
   gap: 20px;
 }
 
-/* drag & drop */
-.drop-zone {
-  border: 2px dashed rgba(0,0,0,0.2);
-  border-radius: 16px;
-  padding: 30px;
-  text-align: center;
-  cursor: pointer;
-  background: rgba(255,255,255,0.4);
-}
-
-.drop-zone.dragover {
-  border-color: #007aff;
-  background: rgba(0,122,255,0.1);
-}
-
-/* video */
 .container {
   position: relative;
 }
@@ -72,10 +55,10 @@ video {
   position: absolute;
 }
 
-.nw { top: -5px; left: -5px; cursor: nwse-resize; }
-.ne { top: -5px; right: -5px; cursor: nesw-resize; }
-.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
-.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.nw { top: -5px; left: -5px; }
+.ne { top: -5px; right: -5px; }
+.sw { bottom: -5px; left: -5px; }
+.se { bottom: -5px; right: -5px; }
 
 /* preview */
 .preview {
@@ -92,30 +75,22 @@ video {
 }
 
 .preview video {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* drag drop */
+.drop-zone {
+  border: 2px dashed rgba(0,0,0,0.2);
+  padding: 20px;
   border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
 }
 
-/* controls */
-.controls {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-input, select {
-  padding: 8px;
-  border-radius: 10px;
-  border: none;
-}
-
-/* button */
-button {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: white;
+.drop-zone.dragover {
+  border-color: #007aff;
 }
 
 /* progress */
