@@ -2,12 +2,8 @@ const videoInput = document.getElementById("videoInput");
 const dropZone = document.getElementById("dropZone");
 const video = document.getElementById("video");
 const previewVideo = document.getElementById("previewVideo");
+const previewFrame = document.getElementById("previewFrame");
 const cropBox = document.getElementById("cropBox");
-
-const xInput = document.getElementById("x");
-const yInput = document.getElementById("y");
-const wInput = document.getElementById("w");
-const hInput = document.getElementById("h");
 
 const ratioSelect = document.getElementById("ratioSelect");
 
@@ -18,7 +14,6 @@ const progressText = document.getElementById("progressText");
 let currentFile;
 let eventSource;
 
-// drag / resize states
 let isDragging = false;
 let isResizing = false;
 let currentHandle = null;
@@ -30,20 +25,15 @@ let startLeft, startTop;
 
 let lockedRatio = null;
 
-//
-// 📥 LOAD VIDEO
-//
+/* load video */
 function loadVideo(file) {
   currentFile = file;
   const url = URL.createObjectURL(file);
-
   video.src = url;
   previewVideo.src = url;
 }
 
-//
-// 🎯 PREVIEW LIVE
-//
+/* preview */
 function updatePreview() {
   if (!video.videoWidth) return;
 
@@ -57,65 +47,68 @@ function updatePreview() {
   const w = cropBox.offsetWidth * scaleX;
   const h = cropBox.offsetHeight * scaleY;
 
+  const frameW = previewFrame.offsetWidth;
+  const frameH = previewFrame.offsetHeight;
+
+  const scale = Math.max(frameW / w, frameH / h);
+
+  previewVideo.style.width = video.videoWidth * scale + "px";
+  previewVideo.style.height = video.videoHeight * scale + "px";
+
   previewVideo.style.objectFit = "none";
-  previewVideo.style.objectPosition = `-${x}px -${y}px`;
-  previewVideo.width = w;
-  previewVideo.height = h;
+  previewVideo.style.objectPosition = `-${x * scale}px -${y * scale}px`;
 }
 
-//
-// 📥 DRAG & DROP
-//
-dropZone.addEventListener("click", () => videoInput.click());
+/* drag & drop */
+dropZone.onclick = () => videoInput.click();
 
-videoInput.addEventListener("change", (e) => {
+videoInput.onchange = e => {
   if (e.target.files[0]) loadVideo(e.target.files[0]);
-});
+};
 
-dropZone.addEventListener("dragover", (e) => {
+dropZone.ondragover = e => {
   e.preventDefault();
   dropZone.classList.add("dragover");
-});
+};
 
-dropZone.addEventListener("dragleave", () => {
+dropZone.ondragleave = () => {
   dropZone.classList.remove("dragover");
-});
+};
 
-dropZone.addEventListener("drop", (e) => {
+dropZone.ondrop = e => {
   e.preventDefault();
   dropZone.classList.remove("dragover");
-
   const file = e.dataTransfer.files[0];
   if (file) loadVideo(file);
-});
+};
 
-//
-// 🎯 RATIO
-//
-ratioSelect.addEventListener("change", () => {
+/* ratio */
+ratioSelect.onchange = () => {
   if (!ratioSelect.value) {
     lockedRatio = null;
+    previewFrame.style.height = "150px";
     return;
   }
 
   const [w, h] = ratioSelect.value.split("/").map(Number);
   lockedRatio = w / h;
 
+  const width = previewFrame.offsetWidth;
+  previewFrame.style.height = width / lockedRatio + "px";
+
   const currentWidth = cropBox.offsetWidth;
   cropBox.style.height = currentWidth / lockedRatio + "px";
 
   updatePreview();
-});
+};
 
-//
-// 🔴 HANDLES
-//
+/* handles */
 ["nw","ne","sw","se"].forEach(pos => {
-  const handle = document.createElement("div");
-  handle.className = "handle " + pos;
-  cropBox.appendChild(handle);
+  const h = document.createElement("div");
+  h.className = "handle " + pos;
+  cropBox.appendChild(h);
 
-  handle.addEventListener("mousedown", (e) => {
+  h.onmousedown = (e) => {
     e.stopPropagation();
     isResizing = true;
     currentHandle = pos;
@@ -126,96 +119,60 @@ ratioSelect.addEventListener("change", () => {
     startHeight = cropBox.offsetHeight;
     startLeft = cropBox.offsetLeft;
     startTop = cropBox.offsetTop;
-  });
+  };
 });
 
-//
-// 🟦 DRAG
-//
-cropBox.addEventListener("mousedown", (e) => {
+/* drag */
+cropBox.onmousedown = e => {
   isDragging = true;
   offsetX = e.offsetX;
   offsetY = e.offsetY;
-});
+};
 
-//
-// 🖱 MOVE
-//
-document.addEventListener("mousemove", (e) => {
+document.onmousemove = e => {
   const rect = video.getBoundingClientRect();
 
-  // DRAG
   if (isDragging) {
     let x = e.clientX - rect.left - offsetX;
     let y = e.clientY - rect.top - offsetY;
 
-    x = Math.max(0, Math.min(x, rect.width - cropBox.offsetWidth));
-    y = Math.max(0, Math.min(y, rect.height - cropBox.offsetHeight));
-
     cropBox.style.left = x + "px";
     cropBox.style.top = y + "px";
-
-    updateInputs();
     updatePreview();
   }
 
-  // RESIZE
   if (isResizing) {
     let dx = e.clientX - startX;
     let dy = e.clientY - startY;
 
-    let newWidth = startWidth;
-    let newHeight = startHeight;
-    let newLeft = startLeft;
-    let newTop = startTop;
+    let w = startWidth;
+    let h = startHeight;
+    let l = startLeft;
+    let t = startTop;
 
-    if (currentHandle.includes("e")) newWidth += dx;
-    if (currentHandle.includes("w")) {
-      newWidth -= dx;
-      newLeft += dx;
-    }
+    if (currentHandle.includes("e")) w += dx;
+    if (currentHandle.includes("w")) { w -= dx; l += dx; }
 
-    if (currentHandle.includes("s")) newHeight += dy;
-    if (currentHandle.includes("n")) {
-      newHeight -= dy;
-      newTop += dy;
-    }
+    if (currentHandle.includes("s")) h += dy;
+    if (currentHandle.includes("n")) { h -= dy; t += dy; }
 
-    if (lockedRatio) {
-      newHeight = newWidth / lockedRatio;
-    }
+    if (lockedRatio) h = w / lockedRatio;
 
-    newWidth = Math.max(20, newWidth);
-    newHeight = Math.max(20, newHeight);
+    cropBox.style.width = Math.max(20, w) + "px";
+    cropBox.style.height = Math.max(20, h) + "px";
+    cropBox.style.left = l + "px";
+    cropBox.style.top = t + "px";
 
-    cropBox.style.width = newWidth + "px";
-    cropBox.style.height = newHeight + "px";
-    cropBox.style.left = newLeft + "px";
-    cropBox.style.top = newTop + "px";
-
-    updateInputs();
     updatePreview();
   }
-});
+};
 
-document.addEventListener("mouseup", () => {
+document.onmouseup = () => {
   isDragging = false;
   isResizing = false;
-});
+};
 
-//
-// 🔢 INPUT SYNC
-//
-function updateInputs() {
-  xInput.value = cropBox.offsetLeft;
-  yInput.value = cropBox.offsetTop;
-  wInput.value = cropBox.offsetWidth;
-  hInput.value = cropBox.offsetHeight;
-}
-
-//
-// 🎬 EXPORT
-//
+/* export */
 async function crop() {
   if (!currentFile) return;
 
@@ -233,18 +190,13 @@ async function crop() {
   progressContainer.style.display = "block";
 
   eventSource = new EventSource("/progress");
-
-  eventSource.onmessage = (e) => {
-    const percent = Number(e.data);
-    progressBar.style.width = percent + "%";
-    progressText.innerText = percent + "%";
+  eventSource.onmessage = e => {
+    const p = Number(e.data);
+    progressBar.style.width = p + "%";
+    progressText.innerText = p + "%";
   };
 
-  const res = await fetch("/crop", {
-    method: "POST",
-    body: formData
-  });
-
+  const res = await fetch("/crop", { method: "POST", body: formData });
   const blob = await res.blob();
 
   eventSource.close();
