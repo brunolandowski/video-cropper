@@ -1,22 +1,19 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-  height: 100vh;
+  font-family: -apple-system;
+  background: #e5e7eb;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100vh;
 }
 
 .app {
-  backdrop-filter: blur(20px);
   background: rgba(255,255,255,0.6);
-  border-radius: 20px;
   padding: 20px;
+  border-radius: 20px;
 }
 
 .layout {
@@ -24,17 +21,15 @@ body {
   gap: 20px;
 }
 
-/* VIDEO */
 .container {
   position: relative;
 }
 
 video {
   max-width: 500px;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
-/* CROP */
 #cropBox {
   position: absolute;
   border: 2px solid red;
@@ -45,7 +40,6 @@ video {
   cursor: move;
 }
 
-/* HANDLES */
 .handle {
   width: 10px;
   height: 10px;
@@ -54,12 +48,11 @@ video {
   position: absolute;
 }
 
-.nw { top: -5px; left: -5px; cursor: nwse-resize; }
-.ne { top: -5px; right: -5px; cursor: nesw-resize; }
-.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
-.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.nw { top:-5px; left:-5px; cursor:nwse-resize;}
+.ne { top:-5px; right:-5px;}
+.sw { bottom:-5px; left:-5px;}
+.se { bottom:-5px; right:-5px;}
 
-/* PREVIEW */
 .preview {
   width: 220px;
 }
@@ -74,32 +67,27 @@ video {
 
 .preview video {
   position: absolute;
-  top: 0;
-  left: 0;
 }
 
-/* DRAG DROP */
 .drop-zone {
-  border: 2px dashed rgba(0,0,0,0.3);
+  border: 2px dashed #aaa;
   padding: 20px;
-  border-radius: 12px;
   text-align: center;
   cursor: pointer;
 }
 
 .drop-zone.dragover {
-  border-color: #007aff;
+  border-color: blue;
 }
 
-/* PROGRESS */
 .progress-bg {
   width: 100%;
   height: 10px;
-  background: rgba(255,255,255,0.5);
+  background: #ccc;
 }
 
 #progressBar {
   height: 10px;
   width: 0%;
-  background: #007aff;
+  background: blue;
 }
