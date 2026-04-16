@@ -1,19 +1,47 @@
-body {
-  font-family: sans-serif;
+* {
+  box-sizing: border-box;
 }
 
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 🧊 glass container */
+.app {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* 🎬 video container */
 .container {
   position: relative;
   display: inline-block;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
 video {
   max-width: 600px;
+  border-radius: 12px;
 }
 
+/* 🔴 crop box */
 #cropBox {
   position: absolute;
-  border: 2px solid red;
+  border: 2px solid rgba(255, 0, 0, 0.8);
+  backdrop-filter: brightness(1.1);
+  border-radius: 8px;
   cursor: move;
   top: 50px;
   left: 50px;
@@ -21,10 +49,12 @@ video {
   height: 150px;
 }
 
+/* handles */
 .handle {
   width: 10px;
   height: 10px;
   background: white;
+  border-radius: 50%;
   border: 2px solid red;
   position: absolute;
 }
@@ -34,6 +64,47 @@ video {
 .sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
 .se { bottom: -5px; right: -5px; cursor: nwse-resize; }
 
+/* 🎛 controls */
 .controls {
-  margin-top: 10px;
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+input, select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(10px);
+  font-size: 14px;
+}
+
+/* 🔘 button */
+button {
+  margin-top: 15px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(0, 122, 255, 0.8);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: rgba(0, 122, 255, 1);
+}
+
+/* 📊 progress */
+#progressContainer {
+  margin-top: 15px;
+}
+
+#progressBar {
+  background: linear-gradient(90deg, #007aff, #00c6ff);
+  height: 10px;
+  border-radius: 10px;
+  transition: width 0.2s;
 }
